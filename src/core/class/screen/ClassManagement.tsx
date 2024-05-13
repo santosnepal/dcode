@@ -14,6 +14,8 @@ import CustomTextInputComponent from '../../auth/component/TextInput.tsx';
 import CustomTouchableOpacityComponent from '../../auth/component/Button.tsx';
 import PopupWithCloseIcon from '../../../shared/interface/Modal.tsx';
 import { getFullName } from '../../../shared/utils/string.ts';
+import DropDownPicker from 'react-native-dropdown-picker';
+import { userRoutes } from '../../user/api-route/index.ts';
 
 interface IClassManagementProps {
   navigation: any;
@@ -45,6 +47,15 @@ export default function ClassManagementScreen(props: IClassManagementProps) {
   const [popUpMode, setPopUpMode] = useState(false);
   const [error, setError] = useState<string | null | boolean>(null);
 
+  const [classTriggerTimeOpenModal, setClassTriggerTimeOpenModal] = useState(false);
+  //Add user to class
+  const [openUserToClass, setOpenUserToClass] = useState(false);
+  const [valueUserToClass, setValueUserToClass] = useState<any>(null);
+  const [users, setUsers] = useState<any[]>([]);
+  const [openClassToTrigger, setOpenClassToTrigger] = useState(false);
+  const [valueClassToTrigger, setValueClassToTrigger] = useState<any>(null);
+  const [classTriggerTimes, setClassTriggerTimes] = useState<any[]>([]);
+
   //fetch user class time map
   const [fetchUserClassTimeMap, setFetchUserClassTimeMapTrigger] = useState<any>({});
 
@@ -55,12 +66,44 @@ export default function ClassManagementScreen(props: IClassManagementProps) {
           data?.data?.rows?.length && setClasses(prevState => [...prevState, ...data?.data?.rows.map((x: any) => ({ ...x, expandUserClassTimeMap: false }))]);
         })
         .catch(error => console.log(error));
+
+      findAllUsers(0, 999)
+        .then(data => {
+          data?.data?.rows?.length &&
+            setUsers([
+              ...data?.data?.rows.map((x: any) => ({
+                value: x.id,
+                label: getFullName({ firstName: x.firstName, lastName: x.lastName, middleName: x.middleName }),
+              })),
+            ]);
+        })
+        .catch(error => console.log(error));
     }
 
     return () => {
       setClasses([]);
     };
   }, []);
+
+  useEffect(() => {
+    if (props?.authUser && classId) {
+      findAllClassTriggerTime(+classId)
+        .then(data => {
+          data?.data?.rows?.length &&
+            setClassTriggerTimes([
+              ...data?.data?.rows.map((x: any) => ({
+                value: x.classTriggerId,
+                label: x?.classTriggerDateTime && getFormatDate(x.classTriggerDateTime),
+              })),
+            ]);
+        })
+        .catch(error => console.log(error));
+    }
+
+    return () => {
+      setClassTriggerTimes([]);
+    };
+  }, [classId]);
 
   useEffect(() => {
     if (!props.authUser) {
@@ -73,6 +116,44 @@ export default function ClassManagementScreen(props: IClassManagementProps) {
       setIsLoading(false);
     };
   }, [props.authUser]);
+
+  const findAllUsers = async (offset: number, _limit: number) => {
+    try {
+      setIsLoading(true);
+      const response = await axios({
+        url: userRoutes.find.route(offset, _limit, props?.authUser?.user?.id ?? 0),
+        method: userRoutes.find.method,
+        headers: {
+          Authorization: 'Bearer ' + props?.authUser?.accessToken,
+        },
+      });
+
+      return response?.data;
+    } catch (e) {
+      console.log(e);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const findAllClassTriggerTime = async (classId: number) => {
+    try {
+      setIsLoading(true);
+      const response = await axios({
+        url: classRoutes.findClassTriggerTime.route(classId),
+        method: classRoutes.findClassTriggerTime.method,
+        headers: {
+          Authorization: 'Bearer ' + props?.authUser?.accessToken,
+        },
+      });
+
+      return response?.data;
+    } catch (e) {
+      console.log(e);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const findAllClasses = async (offset: number, _limit: number) => {
     try {
@@ -188,14 +269,15 @@ export default function ClassManagementScreen(props: IClassManagementProps) {
         url: classRoutes.createClassUserMap.route,
         data: {
           classId,
-          userId: +userId,
-          classTriggerId: +classTriggerId,
+          userId: +valueUserToClass,
+          classTriggerId: +valueClassToTrigger,
         },
         headers: {
           Authorization: 'Bearer ' + props?.authUser?.accessToken,
         },
       });
     } catch (e) {
+      console.log(e);
       setPopUpContent('Please Reverify your credential');
       setPopUpMode(true);
       togglePopup();
@@ -506,6 +588,16 @@ export default function ClassManagementScreen(props: IClassManagementProps) {
               }}
             />
 
+            {/* <DropDownPicker
+              open={classTriggerTimeOpenModal}
+              value={value}
+              items={items}
+              setOpen={setOpen}
+              setValue={setValue}
+              setItems={setItems}
+              placeholder={'Choose a fruit.'}
+            /> */}
+
             <CustomTextInputComponent
               placeholder={'Trigger Date'}
               keyboardType="default"
@@ -650,7 +742,12 @@ export default function ClassManagementScreen(props: IClassManagementProps) {
                 marginTop: 10,
               }}>
               <Text style={{ marginLeft: 20 }}>Add user to class</Text>
-              <Pressable onPress={() => setModalClassUserMapVisible(!modalClassUserMapVisible)}>
+              <Pressable
+                onPress={() => {
+                  setModalClassUserMapVisible(!modalClassUserMapVisible);
+                  setValueClassToTrigger(null);
+                  setValueUserToClass(null);
+                }}>
                 <AntDesign style={{ right: 10 }} name={'close'} color={'#ff6666'} size={25} />
               </Pressable>
             </View>
@@ -663,7 +760,54 @@ export default function ClassManagementScreen(props: IClassManagementProps) {
                 borderBottomColor: 'rgba(0,0,0,0.47)',
               }}
             />
-            <CustomTextInputComponent
+
+            <View>
+              <DropDownPicker
+                style={[
+                  {
+                    borderColor: '#cbcbcc',
+                    borderWidth: 2,
+                    borderRadius: 5,
+                    width: 300,
+                    marginTop: 20,
+                    marginBottom: 10,
+                    paddingLeft: 10,
+                  },
+                  openUserToClass && { zIndex: 999 },
+                ]}
+                open={openUserToClass}
+                value={valueUserToClass}
+                items={users}
+                setOpen={setOpenUserToClass}
+                setValue={setValueUserToClass}
+                setItems={setUsers}
+                placeholder={'Choose a user'}
+              />
+
+              <DropDownPicker
+                style={[
+                  {
+                    borderColor: '#cbcbcc',
+                    borderWidth: 2,
+                    borderRadius: 5,
+                    width: 300,
+                    marginTop: 20,
+                    marginBottom: 10,
+                    paddingLeft: 10,
+                  },
+                  { zIndex: 1999 },
+                ]}
+                open={openClassToTrigger}
+                value={valueClassToTrigger}
+                items={classTriggerTimes}
+                setOpen={setOpenClassToTrigger}
+                setValue={setValueClassToTrigger}
+                setItems={setClassTriggerTimes}
+                placeholder={'Choose a class Trigger Time'}
+              />
+            </View>
+
+            {/* <CustomTextInputComponent
               placeholder={'User Id'}
               keyboardType="numeric"
               autoComplete={'numeric'}
@@ -672,9 +816,9 @@ export default function ClassManagementScreen(props: IClassManagementProps) {
               secureTextEntry={false}
               value={userId}
               dispatch={text => setUserId(text)}
-            />
+            /> */}
 
-            <CustomTextInputComponent
+            {/* <CustomTextInputComponent
               placeholder={'Class DateTime Id'}
               keyboardType="numeric"
               autoComplete={'numeric'}
@@ -683,7 +827,7 @@ export default function ClassManagementScreen(props: IClassManagementProps) {
               secureTextEntry={false}
               value={classTriggerId}
               dispatch={text => setClassTriggerId(text)}
-            />
+            /> */}
 
             <CustomTouchableOpacityComponent isDisable={false} textMessage={'Save'} onSubmitHandler={saveClassUserMapHandler} isLoading={isLoading} />
           </View>

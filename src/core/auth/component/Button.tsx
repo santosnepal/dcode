@@ -1,10 +1,4 @@
-import {
-  ActivityIndicator,
-  GestureResponderEvent,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-} from 'react-native';
+import { ActivityIndicator, GestureResponderEvent, StyleSheet, Text, TouchableOpacity } from 'react-native';
 import React from 'react';
 
 export interface ICustomTouchableOpacityProps {
@@ -12,25 +6,17 @@ export interface ICustomTouchableOpacityProps {
   isDisable?: boolean;
   onSubmitHandler: (event: GestureResponderEvent) => void;
   isLoading?: boolean;
-  style?: any
+  style?: any;
 }
-export default function CustomTouchableOpacityComponent(
-  props: ICustomTouchableOpacityProps,
-) {
+export default function CustomTouchableOpacityComponent(props: ICustomTouchableOpacityProps) {
   return (
     <TouchableOpacity
-      style={[
-        styles.button,
-        {backgroundColor: props?.isLoading ? '#8654d6' : '#570bce'},
-        props.style
-      ]}
+      style={[styles.button, { backgroundColor: props?.isLoading ? '#8654d6' : '#570bce' }, props.style]}
       disabled={props?.isDisable ?? false}
+      // disabled={props?.isLoading}
       onPress={props.onSubmitHandler}>
       <Text style={styles.text}>{props.textMessage}</Text>
-      <ActivityIndicator
-        animating={props?.isLoading ?? false}
-        color={'#570bce'}
-      />
+      <ActivityIndicator animating={props?.isLoading ?? false} color={'#570bce'} />
     </TouchableOpacity>
   );
 }

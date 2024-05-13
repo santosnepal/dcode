@@ -41,25 +41,6 @@ export default function UserManagementScreen(props: IUserManagementProps) {
       findAllUsers(offSet, limit)
         .then(data => {
           data?.data?.rows?.length && setUsers([...(data?.data?.rows?.length && data?.data?.rows)]);
-          // setChildUsers(prevState => {
-          //   return [
-          //     ...prevState,
-          //     ...data?.data?.rows?.map((user: any) => ({
-          //       parentUserId: user.id,
-          //       childUsers: [],
-          //       modal: false,
-          //       isLoading: false,
-          //     })),
-          //   ];
-          // });
-
-          // setUserArrows(prevState => [
-          //   ...prevState,
-          //   ...data?.data?.rows?.map((user: any) => ({
-          //     userId: user.id,
-          //     arrowDown: true,
-          //   })),
-          // ]);
         })
         .catch(error => console.log(error));
     }

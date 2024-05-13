@@ -88,7 +88,7 @@ export default function NotificationManagementScreen(props: INotificationManagem
       {notifications.length ? (
         <FlatList
           data={notifications}
-          renderItem={({ item, index }) => {
+          renderItem={({ item, index }: any) => {
             return (
               <View key={index}>
                 <View style={styles.card}>

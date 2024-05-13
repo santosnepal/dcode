@@ -5,3 +5,8 @@ export enum ApiMethod {
   PUT = 'PUT',
   DELETE = 'DELETE',
 }
+
+export enum ProjectModule {
+  USER = 'user',
+  CLASS = 'class',
+}

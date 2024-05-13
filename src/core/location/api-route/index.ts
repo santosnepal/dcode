@@ -11,4 +11,8 @@ export const locationRoute = {
     method: ApiMethod.GET,
     route: BASE_URL + '/locations',
   },
+  calculateDistance: {
+    method: ApiMethod.POST,
+    route: BASE_URL + '/locations/calculate-distance',
+  },
 };
