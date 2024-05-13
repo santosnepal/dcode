@@ -91,66 +91,75 @@ export default function MapScreen(props: IMapManagementProps) {
   };
 
   const getLocation = () => {
-    Geolocation.getCurrentPosition(
-      async position => {
-        const tempClosetDistances: any[] = [];
-        // console.log('position===> ', position);
-        // console.log('coordinates===> ', coordinates);
-        // console.log('closetDistances===> ', closetDistances);
+    try {
 
-        for (let idx = 0; idx < coordinates.length; idx++) {
-          const element = coordinates[idx];
-          // console.log({
-          //   userGeoLocation: {
-          //     lat: position.coords.latitude,
-          //     long: position.coords.longitude,
-          //   },
-          //   classId: element?.reference?.referenceId,
-          // });
+      Geolocation.getCurrentPosition(
+        async position => {
+          const tempClosetDistances: any[] = [];
+          // console.log('position===> ', position);
+          // console.log('coordinates===> ', coordinates);
+          // console.log('closetDistances===> ', closetDistances);
 
-          const result = (
-            await axios({
-              headers: {
-                Authorization: 'Bearer ' + props?.authUser?.accessToken,
-              },
-              method: locationRoute.calculateDistance.method,
-              url: locationRoute.calculateDistance.route,
-              data: {
-                userGeoLocation: {
-                  // lat: 52.469,
-                  lat: position.coords.latitude,
-                  // long: -3.39,
-                  long: position.coords.longitude,
+          for (let idx = 0; idx < coordinates.length; idx++) {
+            const element = coordinates[idx];
+            // console.log({
+            //   userGeoLocation: {
+            //     lat: position.coords.latitude,
+            //     long: position.coords.longitude,
+            //   },
+            //   classId: element?.reference?.referenceId,
+            // });
+
+            const result = (
+              await axios({
+                headers: {
+                  Authorization: 'Bearer ' + props?.authUser?.accessToken,
                 },
-                classId: element?.reference?.referenceId,
-              },
-            })
-          ).data?.data;
+                method: locationRoute.calculateDistance.method,
+                url: locationRoute.calculateDistance.route,
+                data: {
+                  userGeoLocation: {
+                    // lat: 52.469,
+                    lat: position.coords.latitude,
+                    // long: -3.39,
+                    long: position.coords.longitude,
+                  },
+                  classId: element?.reference?.referenceId,
+                },
+              })
+            ).data?.data;
 
-          // console.log('result===> ', result);
+            // console.log('result===> ', result);
 
-          if (result <= 500) {
-            tempClosetDistances.push(element);
+            if (result <= 500) {
+              tempClosetDistances.push(element);
+            }
           }
-        }
 
-        setClosetDistances(tempClosetDistances);
+          setClosetDistances(tempClosetDistances);
 
-        // setMLat(52.469);
-        // setMLong(-3.39);
-        // console.log(position);
-        setMLat(position.coords.latitude);
-        setMLong(position.coords.longitude);
-      },
-      error => {
-        // See error code charts below.
-        console.log(error.code, error.message);
-        setPopUpContent('Error in getting location make sure you provided permission and have proper internet and gps access');
-        setPopUpMode(true);
-        togglePopup();
-      },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
-    );
+          // setMLat(52.469);
+          // setMLong(-3.39);
+          // console.log(position);
+          setMLat(position.coords.latitude);
+          setMLong(position.coords.longitude);
+        },
+        error => {
+          // See error code charts below.
+          console.log(error.code, error.message);
+          setPopUpContent('Error in getting location make sure you provided permission and have proper internet and gps access');
+          setPopUpMode(true);
+          togglePopup();
+        },
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+      );
+
+    } catch (error) {
+      // console.log(error.code, error.message);
+      setPopUpContent('Error in getting location make sure you provided permission and have proper internet and gps access');
+      setPopUpMode(true);
+      togglePopup();
+    }
   };
   useEffect(() => {
     if (props?.authUser) {
